@@ -1,25 +1,30 @@
+clear all
+
 n_patient_per_day=70;%average new patient in the system each day.
-new_to_old_ratio=1;
-inflation_factor=50;
+inflation_factor=100;
 visit_vec=[];
 lag_vec=[];
 date_vec=[];
 
+fprob = @(j) tanh(inflation_factor*j);
+%fprob = @(j) 2/pi*atan(inflation_factor*pi*j);
+
 for day=1:300
-    
+    fprintf ('day %d \r', day)
     %repeat visits
-    repeat_patients=poissrnd(n_patient_per_day/new_to_old_ratio);
     total=sum(visit_vec);
+    lag_list=zeros(1,length(visit_vec));
     
-    for iter=1:length(visit_vec)
-        R = randsample([1 0],1,true,[(visit_vec(iter))*inflation_factor total-(visit_vec(iter))*inflation_factor]);
-        visit_vec(iter)=visit_vec(iter)+R;
+    parfor iter=1:length(visit_vec)
+        R = randsample([1 0],1,true,[fprob(visit_vec(iter)/total) 1-fprob(visit_vec(iter))/total]);
         if R==1
-            lag_vec=cat(1,lag_vec,day-date_vec(iter));
+            visit_vec(iter)=visit_vec(iter)+1;
+            lag_list(iter)=(day-date_vec(iter))*R;
             date_vec(iter)=day;
         end
-        
     end
+    
+    lag_vec = cat(2,lag_vec,lag_list(lag_list~=0));
     
     %add new patients
     new_patients=poissrnd(n_patient_per_day);
@@ -40,7 +45,7 @@ xlabel('Log10 of # of admissions')
 ylabel('Log10 of # of Patients')
 
 a = unique(lag_vec);
-lag_out = [a,histc(lag_vec(:),a)];
+lag_out = [a',histc(lag_vec(:),a)];
 
 figure(2)
 plot(log10(lag_out(:,1)),log10(lag_out(:,2)),'ro')
