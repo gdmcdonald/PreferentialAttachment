@@ -40,9 +40,11 @@ a = unique(visit_vec);
 admissions_out = [a,histc(visit_vec(:),a)];
 
 figure(1)
-plot(log10(admissions_out(:,1)),log10(admissions_out(:,2)),'ro')
-xlabel('Log10 of # of admissions')
-ylabel('Log10 of # of Patients')
+loglog(admissions_out(:,1),admissions_out(:,2),'ro')
+xlabel('Number of admissions per patient')
+ylabel('Number of Patients with this many admissions')
+set(gca,'XTickLabel',num2str(get(gca,'XTick').'))
+set(gca,'YTickLabel',num2str(get(gca,'YTick').'))
 
 a = unique(lag_vec);
 lag_out = [a',histc(lag_vec(:),a)];
